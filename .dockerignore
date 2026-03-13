@@ -1,0 +1,9 @@
+node_modules
+TODO/todo_backend/node_modules
+TODO/todo_frontend/node_modules
+TODO/todo_backend/.env
+TODO/todo_frontend/.env
+.env
+*.log
+.git
+.gitignore
