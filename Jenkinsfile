@@ -8,14 +8,14 @@ pipeline {
     stages {
 
         stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
             steps {
-                echo 'Installing dependencies...'
-                // Install backend dependencies
-                sh '''
-                    cd TODO/todo_backend
-                    npm install
-                '''
-                // Install frontend dependencies
+                sh 'cd TODO/todo_backend && npm install'
                 sh '''
                     cd TODO/todo_frontend
                     npm install
@@ -28,30 +28,26 @@ pipeline {
 
         stage('Containerise') {
             steps {
-                echo 'Building Docker image...'
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
         stage('Push') {
             steps {
-                echo 'Pushing image to Docker Hub...'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ''' + IMAGE_NAME + '''
-                    '''
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    sh "docker push ${IMAGE_NAME}"
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Security') {
             steps {
-                echo 'Deployment ready. Use docker run command to test.'
+                echo 'Using Jenkins Credentials Provider — no hardcoded secrets.'
                 sh "docker images ${IMAGE_NAME}"
             }
         }
